@@ -192,7 +192,7 @@ export class CharSelect {
     if (P.locked) { P.locked = false; this.updatePreview(true); this.sendSel(); this.draw(); return; }
     if (this.phase === 'p1') { this.phase = 'p0'; this.p[0].locked = false; this.updatePreview(true); this.draw(); return; }
     if (this.online) { this.leaveOnline(); return; }
-    import('./screens.js').then(({ MainMenu }) => A.go(new MainMenu(A, { cpu: 0, local: 1, training: 3 }[this.mode] || 0)));
+    import('./screens.js').then(({ MainMenu }) => A.go(new MainMenu(A, { cpu: 1, local: 2, training: 4 }[this.mode] || 0)));
   }
 
   checkBoth() {

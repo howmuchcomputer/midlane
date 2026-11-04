@@ -1,12 +1,12 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Pose sheet</title>
 <style>html,body{margin:0;background:#1b1d26;overflow:hidden}canvas{display:block}#lbl{position:fixed;inset:0;pointer-events:none;font:11px monospace;color:#fff}</style>
-<script type="importmap">{"imports":{"three":"/vendor/three/build/three.module.js","three/addons/":"/vendor/three/addons/"}}</script>
+<script type="importmap">{"imports":{"three":"../vendor/three/build/three.module.js","three/addons/":"../vendor/three/addons/"}}</script>
 </head><body><div id="lbl"></div>
 <script type="module">
 import * as THREE from 'three';
-import { FighterView } from '/src/render/fighterView.js';
-import { HEROES } from '/src/sim/heroes/index.js';
+import { FighterView } from '../src/render/fighterView.js';
+import { HEROES } from '../src/sim/heroes/index.js';
 const q = new URLSearchParams(location.search);
 const hero = q.get('hero') || 'aldric';
 const W = 1600, H = 1000;

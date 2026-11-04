@@ -1,7 +1,7 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Icon Set</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script type="importmap">{"imports":{"three":"/vendor/three/build/three.module.js","three/addons/":"/vendor/three/addons/"}}</script>
+<script type="importmap">{"imports":{"three":"../vendor/three/build/three.module.js","three/addons/":"../vendor/three/addons/"}}</script>
 <style>
   :root { --bg: #14161d; --panel: #1c1f29; --ink: #e9e6dc; --dim: #8d8a80; --gold: #c9a45a; }
   * { box-sizing: border-box; }
@@ -39,7 +39,7 @@
 <header><h1>MIDLANE · ICONS</h1><span id="count"></span><span>params: <code>?themes=default,str,agi,int,shop</code> · <code>&raw=0</code> · <code>&rawsize=96</code> · <code>&hud=0</code></span></header>
 <div id="root"></div>
 <script type="module">
-import { ICON_NAMES, glyph, iconSVG, iconDataURL } from '/src/ui/icons.js';
+import { ICON_NAMES, glyph, iconSVG, iconDataURL } from '../src/ui/icons.js';
 const q = new URLSearchParams(location.search);
 const THEMES = {
   default: { label: 'Default', swatch: '#223', opts: {} },

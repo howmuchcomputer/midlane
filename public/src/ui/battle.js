@@ -29,7 +29,19 @@ export class Battle {
     const st = STAGE_BY_ID[cfg.stage];
     A.audio.music(st ? st.music : 'stage_river');
     A.audio.setIntensity(0.45);
-    this.splash(cfg, st);
+    // Quick play uses only the short in-arena countdown before you can move.
+    if (cfg.quick) this.splashT = 0;
+    else this.splash(cfg, st);
+    if (cfg.quick) {
+      const L = A.input.layouts.solo;
+      const keys = (actions) => actions.map((a) => keyLabel((L[a] || [])[0])).join(' / ');
+      const controls = A.input.pads().length
+        ? 'Stick / D-pad move · X / Y / RB attack · A / B / RT abilities · Start pause'
+        : `${keys(['up', 'left', 'down', 'right'])} move · ${keys(['L', 'M', 'H'])} attack · ${keys(['Q', 'W', 'E'])} abilities · Esc pause`;
+      this.quickHint = h('div', { class: 'quick-controls' }, controls);
+      this.quickHintT = 14;
+      A.ui.append(this.quickHint);
+    }
     this.overT = 0;
     this.resultsShown = false;
     this.paused = false;
@@ -85,6 +97,10 @@ export class Battle {
       if (this.splashT <= 0 && this.splashEl) { this.splashEl.remove(); this.splashEl = null; }
     } else evs = this.match.update(dt);
     const G = this.match.G;
+    if (this.quickHint && !this.match.paused && G.phase === 'fight') {
+      this.quickHintT -= dt;
+      if (this.quickHintT <= 0) { this.quickHint.remove(); this.quickHint = null; }
+    }
     for (const e of evs) {
       this.hud.onEvent(e, G);
       playEventAudio(A, e, G, { local: this.local });
@@ -151,7 +167,10 @@ export class Battle {
     const items = this.pauseItems();
     this.pauseSel = Math.min(this.pauseSel, items.length - 1);
     const list = h('div', { class: 'menu-list' });
-    items.forEach(([n, fn], i) => list.append(h('div', { class: 'menu-item' + (i === this.pauseSel ? ' sel' : ''), onmouseenter: () => { this.pauseSel = i; this.drawPause(); }, onclick: () => { fn(); if (this.pauseEl) this.drawPause(); } }, [h('div', { class: 'mi-name' }, n)])));
+    items.forEach(([n, fn], i) => list.append(h('div', { class: 'menu-item' + (i === this.pauseSel ? ' sel' : ''), onmouseenter: () => {
+      this.pauseSel = i;
+      [...list.children].forEach((el, k) => el.classList.toggle('sel', k === i));
+    }, onclick: () => { fn(); if (this.pauseEl) this.drawPause(); } }, [h('div', { class: 'mi-name' }, n)])));
     this.pauseEl.append(h('div', { class: 'panel' }, [h('div', { class: 'eyebrow', style: 'margin-bottom:10px' }, this.cfg.online ? 'Menu — the match keeps running' : 'Paused'), list]));
   }
   pauseNav(a, e) {
@@ -256,7 +275,10 @@ export class Battle {
     }
     R.append(t);
     const btns = h('div', { class: 'res-btns' });
-    this.resultButtons().forEach(([n, fn], i) => btns.append(h('button', { class: 'btn' + (i === this.resSel ? ' sel' : ''), onclick: fn, onmouseenter: () => { this.resSel = i; this.drawResults(); } }, n)));
+    this.resultButtons().forEach(([n, fn], i) => btns.append(h('button', { class: 'btn' + (i === this.resSel ? ' sel' : ''), onclick: fn, onmouseenter: () => {
+      this.resSel = i;
+      [...btns.children].forEach((el, k) => el.classList.toggle('sel', k === i));
+    } }, n)));
     R.append(btns);
   }
   resultsNav(a) {

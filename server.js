@@ -4,12 +4,14 @@
 //
 //   node server.js            (port 7878, all interfaces; tries the next port if busy)
 //   PORT=8080 node server.js  (use exactly this port)
+//   node server.js --open     (also open the game in your default browser)
 import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { openBrowser } from './tools/browser.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, 'public');
@@ -247,9 +249,14 @@ server.on('error', (err) => {
 
 server.listen(PORT, HOST);
 server.on('listening', () => {
+  PORT = server.address().port;
   const lan = lanAddresses();
   console.log('\n  ⚔  MIDLANE server running\n');
   console.log(`     Local:   http://localhost:${PORT}`);
   for (const a of lan) console.log(`     LAN:     http://${a.address}:${PORT}   (${a.name})`);
   console.log('\n  Open one of the LAN addresses on the other laptop to join.\n');
+  if (process.argv.includes('--open') && !process.argv.includes('--no-open') && process.env.BROWSER !== 'none') {
+    const host = HOST === '0.0.0.0' || HOST === '::' ? 'localhost' : HOST.includes(':') ? `[${HOST}]` : HOST;
+    openBrowser(`http://${host}:${PORT}`);
+  }
 });

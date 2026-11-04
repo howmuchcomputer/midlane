@@ -93,7 +93,7 @@ export class Input {
       if (!e.repeat) { this.down.add(e.code); this.latch.add(e.code); }
       const nav = navFor(e.code);
       if (nav) this.emitNav(nav, 'kb', e);
-      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault();
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     } else this.down.delete(e.code);
   }
 

@@ -2,6 +2,7 @@
 import { h, clear, toast } from './dom.js';
 import { NetClient } from '../net/client.js';
 import { CharSelect } from './select.js';
+import { LAN_ENABLED, OFFLINE_BUILD } from '../features.js';
 
 export class Lobby {
   constructor(app, client = null) { this.app = app; this.client = client; this.rooms = []; this.sel = 0; this.state = 'idle'; }
@@ -13,6 +14,31 @@ export class Lobby {
     A.hudRoot.classList.add('hidden');
     A.audio.music('select');
     if (!A.backdrop || A.backdrop.idle) A.setBackdrop();
+    if (!LAN_ENABLED) {
+      A.ui.append(h('div', { class: 'page' }, [
+        h('div', { class: 'page-head' }, [
+          h('div', {}, [h('div', { class: 'eyebrow' }, 'Multiplayer'), h('h1', { class: 'h1' }, 'Play with a friend')]),
+          h('button', { class: 'btn', onclick: () => this.back() }, 'Back'),
+        ]),
+        h('div', { class: 'page-body grid2' }, [
+          h('div', { class: 'card panel' }, [
+            h('h3', {}, 'Two players. One computer.'),
+            h('p', {}, 'Share a keyboard or connect two gamepads. Choose your heroes and fight right here.'),
+            h('button', { class: 'btn', onclick: () => A.go(new CharSelect(A, { mode: 'local' })) }, 'Play local versus'),
+          ]),
+          h('div', { class: 'card panel' }, [
+            h('h3', {}, 'On separate computers?'),
+            h('p', {}, 'LAN battles need the downloadable server version.'),
+            h('p', {}, 'One person runs the server; everyone joins on the same Wi-Fi.'),
+            h('a', { class: 'btn ghost', href: 'https://github.com/howmuchcomputer/midlane/archive/refs/heads/main.zip', target: '_blank', rel: 'noopener' }, 'Get LAN version'),
+            OFFLINE_BUILD
+              ? h('p', {}, 'You’re playing the offline edition. Solo fights, training, and Local Versus work without an internet connection.')
+              : h('p', {}, [h('a', { class: 'btn ghost', href: './download/MIDLANE-offline.zip', download: '' }, 'Download game'), ' — unzip and open MIDLANE.html. Nothing to install.']),
+          ]),
+        ]),
+      ]));
+      return;
+    }
     const name = A.settings.name || ('Hero' + Math.floor(100 + Math.random() * 900));
     this.nameIn = h('input', { class: 'input', value: name, maxlength: '20', placeholder: 'Your name' });
     this.nameIn.addEventListener('change', () => this.setName());
@@ -130,9 +156,13 @@ export class Lobby {
   back() {
     if (this.client) { this.client.send({ t: 'leave' }); this.client.close(); }
     this.app.audio.play('ui_back');
-    import('./screens.js').then(({ MainMenu }) => this.app.go(new MainMenu(this.app, 2)));
+    import('./screens.js').then(({ MainMenu }) => this.app.go(new MainMenu(this.app, 3)));
   }
   nav(a, src, e) {
+    if (!LAN_ENABLED) {
+      if (a === 'pause' || a === 'back') { if (e) e.preventDefault(); this.back(); }
+      return;
+    }
     if (e && e.target && e.target.tagName === 'INPUT' && a !== 'back') return;
     const n = (this.openRooms || []).length;
     if (a === 'up' && n) { this.sel = (this.sel + n - 1) % n; this.drawList(); }

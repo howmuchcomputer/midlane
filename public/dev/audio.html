@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Audio Audition</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script type="importmap">{"imports":{"three":"/vendor/three/build/three.module.js","three/addons/":"/vendor/three/addons/"}}</script>
+<script type="importmap">{"imports":{"three":"../vendor/three/build/three.module.js","three/addons/":"../vendor/three/addons/"}}</script>
 <style>
-@font-face{font-family:Cinzel;font-weight:700;src:url(/vendor/fonts/cinzel-latin-700-normal.woff2) format('woff2')}
-@font-face{font-family:Rajdhani;font-weight:500;src:url(/vendor/fonts/rajdhani-latin-500-normal.woff2) format('woff2')}
-@font-face{font-family:Rajdhani;font-weight:700;src:url(/vendor/fonts/rajdhani-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:Cinzel;font-weight:700;src:url(../vendor/fonts/cinzel-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:Rajdhani;font-weight:500;src:url(../vendor/fonts/rajdhani-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:Rajdhani;font-weight:700;src:url(../vendor/fonts/rajdhani-latin-700-normal.woff2) format('woff2')}
 :root{--bg:#12131a;--panel:#1b1d27;--line:#2c2f3d;--ink:#e8e6df;--dim:#8d90a3;--gold:#e0b25a;--accent:#5ab3e0;--hot:#e0645a;--ok:#6ad08a}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.35 Rajdhani,system-ui,sans-serif}
@@ -93,7 +93,7 @@ canvas{width:100%;height:90px;display:block;background:#0d0e13;border-radius:6px
   </div>
 </main>
 <script type="module">
-import { AudioEngine, SFX, SFX_GROUPS, TRACKS, TRACK_IDS } from '/src/audio/audio.js';
+import { AudioEngine, SFX, SFX_GROUPS, TRACKS, TRACK_IDS } from '../src/audio/audio.js';
 
 const audio = new AudioEngine();
 window.__audio = audio;

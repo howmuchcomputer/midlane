@@ -8,35 +8,69 @@ import { ITEMS, RUNES } from '../sim/items.js';
 import { itemIconSVG } from './hud.js';
 import { iconSVG } from './icons.js';
 import { ULT_LEVEL } from '../sim/const.js';
+import { Battle } from './battle.js';
+import { LAN_ENABLED, OFFLINE_BUILD } from '../features.js';
+
+// A ready-to-play match: no selection screens or strategy shop to get through.
+function playNow(app) {
+  app.audio.unlock();
+  app.go(new Battle(app, {
+    mode: 'cpu', quick: true, heroes: ['aldric', 'ysolde'], stage: 'river',
+    seed: (Math.random() * 2 ** 31) >>> 0,
+    devices: ['any', 'any'], ai: [null, 0],
+    roundsToWin: 2, runes: true, shop: false,
+  }));
+}
 
 export class TitleScreen {
-  constructor(app) { this.app = app; }
+  constructor(app) { this.app = app; this.sel = 0; }
   enter() {
     const A = this.app;
     A.shade('title');
     A.renderer.viewT = { zoom: 1.05, shift: 0, lift: 0.2 };
-    this.el = h('div', { class: 'title-screen', onclick: () => this.next() }, [
-      h('div', {}, [
+    this.actions = [() => playNow(A), () => A.go(new MainMenu(A))];
+    this.buttons = [
+      h('button', { type: 'button', class: 'btn play-now', onclick: () => this.activate(0), onfocus: () => this.select(0), 'aria-describedby': 'quick-play-description' }, 'Play now'),
+      h('button', { type: 'button', class: 'btn ghost', onclick: () => this.activate(1), onfocus: () => this.select(1) }, 'More ways to play'),
+    ];
+    this.el = h('div', { class: 'title-screen' }, [
+      h('div', { class: 'title-content' }, [
         h('div', { class: 'logo' }, 'MIDLANE'),
         h('div', { class: 'tag' }, 'A Duel of Heroes'),
-        h('div', { class: 'press' }, 'Press any key'),
+        h('p', { class: 'title-pitch' }, 'Six heroes. One lane. Jump straight into the fight.'),
+        h('div', { class: 'title-actions' }, this.buttons),
+        h('p', { id: 'quick-play-description', class: 'quick-play-description' }, 'You’re Aldric · Easy CPU · No setup or shop'),
+        h('p', { class: 'title-help' }, 'Choose heroes, play with a friend, or train in More ways to play.'),
+        h('p', { class: 'title-input-hint' }, 'Keyboard or gamepad · Enter or A to play'),
       ]),
-      h('div', { class: 'ver' }, 'v1.0 · LAN edition'),
+      h('div', { class: 'ver' }, `v1.0 · ${LAN_ENABLED ? 'LAN' : OFFLINE_BUILD ? 'Offline' : 'Browser'} edition`),
     ]);
     A.ui.append(this.el);
     A.audio.music('menu');
-    this.keyAny = (e) => { if (!e.repeat) this.next(); };
-    addEventListener('keydown', this.keyAny);
+    this.select(0);
+    this.buttons[0].focus({ preventScroll: true });
   }
-  nav() { this.next(); }
-  next() {
+  select(i) {
+    this.sel = i;
+    this.buttons.forEach((button, k) => button.classList.toggle('sel', k === i));
+  }
+  nav(a, src, e) {
+    if (e && e.repeat) return;
+    if (a === 'up' || a === 'down' || a === 'left' || a === 'right') {
+      this.select(1 - this.sel);
+      this.buttons[this.sel].focus({ preventScroll: true });
+    } else if (a === 'confirm' || (a === 'pause' && src && src.startsWith('pad'))) {
+      if (e) e.preventDefault(); // Avoid a second native button click from Enter.
+      this.activate(this.sel);
+    }
+  }
+  activate(i) {
     if (this.done) return;
     this.done = true;
     this.app.audio.unlock();
     this.app.audio.play('ui_select');
-    this.app.go(new MainMenu(this.app));
+    this.actions[i]();
   }
-  exit() { removeEventListener('keydown', this.keyAny); }
 }
 
 // ---------------------------------------------------------------------------
@@ -50,16 +84,17 @@ export class MainMenu {
     if (!A.backdrop || A.backdrop.idle) A.setBackdrop();
     A.audio.music('menu');
     this.items = [
+      ['Play now', 'Jump into a fight as Aldric against an Easy CPU. No setup or shop.', () => playNow(A)],
       ['Versus CPU', 'Fight the machine. Pick its hero and difficulty.', () => A.go(new CharSelect(A, { mode: 'cpu' }))],
       ['Local Versus', 'Two players, one machine — keyboard halves or gamepads.', () => A.go(new CharSelect(A, { mode: 'local' }))],
-      ['LAN Battle', 'Host or join a duel with someone on your network.', () => A.go(new Lobby(A))],
+      [LAN_ENABLED ? 'LAN Battle' : 'Play with a friend', LAN_ENABLED ? 'Host or join a duel with someone on your network.' : 'Play on one computer, or get the LAN version for separate computers.', () => A.go(new Lobby(A))],
       ['Training', 'Frame data, hitboxes, infinite resources, a patient dummy.', () => A.go(new CharSelect(A, { mode: 'training' }))],
       ['How to Play', 'Controls, systems, and the MOBA layer explained.', () => A.go(new HowTo(A))],
       ['Options', 'Audio, graphics, rules and key bindings.', () => A.go(new Options(A))],
     ];
     this.list = h('div', { class: 'menu-list' });
     this.items.forEach(([n, d, fn], i) => {
-      const el = h('div', { class: 'menu-item', onmouseenter: () => this.select(i), onclick: () => { this.select(i); this.activate(); } }, [
+      const el = h('button', { type: 'button', class: 'menu-item', onfocus: () => this.select(i), onmouseenter: () => this.select(i), onclick: () => { this.select(i); this.activate(); } }, [
         h('div', { class: 'mi-name' }, n), h('div', { class: 'mi-desc' }, d),
       ]);
       this.list.append(el);
@@ -71,17 +106,21 @@ export class MainMenu {
       h('span', {}, [h('span', { class: 'kbd' }, 'Esc'), ' Back']),
     ]));
     this.select(this.sel, true);
+    this.list.children[this.sel].focus({ preventScroll: true });
   }
   select(i, silent) {
     if (i !== this.sel && !silent) this.app.audio.play('ui_move');
     this.sel = (i + this.items.length) % this.items.length;
     [...this.list.children].forEach((el, k) => el.classList.toggle('sel', k === this.sel));
+    this.list.children[this.sel].scrollIntoView({ block: 'nearest' });
   }
   activate() { this.app.audio.play('ui_select'); this.items[this.sel][2](); }
-  nav(a) {
-    if (a === 'up') this.select(this.sel - 1);
-    else if (a === 'down') this.select(this.sel + 1);
-    else if (a === 'confirm') this.activate();
+  nav(a, src, e) {
+    if (a === 'up' || a === 'down') {
+      this.select(this.sel + (a === 'up' ? -1 : 1));
+      this.list.children[this.sel].focus({ preventScroll: true });
+    }
+    else if (a === 'confirm') { if (e) { e.preventDefault(); if (e.repeat) return; } this.activate(); }
     else if (a === 'back' || a === 'pause') { this.app.audio.play('ui_back'); this.app.go(new TitleScreen(this.app)); }
   }
 }
@@ -138,7 +177,7 @@ export class HowTo {
     ]);
     A.ui.append(page);
   }
-  back() { this.app.audio.play('ui_back'); this.app.go(new MainMenu(this.app, 4)); }
+  back() { this.app.audio.play('ui_back'); this.app.go(new MainMenu(this.app, 5)); }
   nav(a) { if (a === 'back' || a === 'pause') this.back(); }
 }
 
@@ -230,7 +269,7 @@ export class Options {
     this.app.audio.play('ui_move');
     this.drawRows();
   }
-  back() { this.app.audio.play('ui_back'); this.app.go(new MainMenu(this.app, 5)); }
+  back() { this.app.audio.play('ui_back'); this.app.go(new MainMenu(this.app, 6)); }
   nav(a) {
     if (this.app.input.capture) return;
     if (a === 'up') { this.select(this.sel - 1); this.app.audio.play('ui_move'); }

@@ -1,17 +1,22 @@
 <div align="center">
 
-<img src="docs/media/title.jpg" alt="MIDLANE title screen" width="100%">
-
 # MIDLANE
 
 **Six heroes. One lane. No mercy.**
+
+[![Play in browser](https://img.shields.io/badge/PLAY-IN_BROWSER-e8c26a?style=for-the-badge)](https://howmuchcomputer.github.io/midlane/)
+[![Download game](https://img.shields.io/badge/DOWNLOAD-OFFLINE_GAME-4fb6ff?style=for-the-badge)](https://howmuchcomputer.github.io/midlane/download/MIDLANE-offline.zip)
+
+**Nothing to install. Open the game and press Play now.**
+
+<img src="docs/media/quick-play.png" alt="MIDLANE — click Play now to start a fight" width="100%">
 
 A 2.5D fighting game for the browser where MOBA heroes settle things Street Fighter style.
 Level up mid-fight, buy items between rounds, unleash your ultimate, and beat your friend over the LAN with rollback netcode.
 
 [![CI](https://github.com/howmuchcomputer/midlane/actions/workflows/ci.yml/badge.svg)](https://github.com/howmuchcomputer/midlane/actions/workflows/ci.yml)
 ![zero runtime dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
-![no build step](https://img.shields.io/badge/build%20step-none-blue)
+![no player setup](https://img.shields.io/badge/player%20setup-none-blue)
 [![MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
 <img src="docs/media/ultimate.gif" alt="Orren casting Supernova Lance" width="100%">
@@ -20,14 +25,30 @@ Level up mid-fight, buy items between rounds, unleash your ultimate, and beat yo
 
 ---
 
-## 🎮 Get fighting in 30 seconds
+## 🎮 Open it. Press Play now. Fight.
 
-You need [Node.js](https://nodejs.org) 18 or newer. That's it. No `npm install`, no bundler, no build step.
+**[Play in your browser](https://howmuchcomputer.github.io/midlane/)** and click **Play now**. You jump straight into a match as Aldric against an Easy CPU on Riverbank. No mode, hero, arena, or shop screens to get through. A short countdown gives you a moment to get ready, and controls appear in the arena. Keyboard and gamepads work automatically.
+
+Use **More ways to play** to choose your heroes, change difficulty, train, or play with a friend. Quick play uses its own simple rules; your custom match settings stay saved.
+
+### Download and play offline
+
+1. [Download the offline game](https://howmuchcomputer.github.io/midlane/download/MIDLANE-offline.zip).
+2. Unzip it and open **MIDLANE.html** in your desktop browser.
+3. Click **Play now**.
+
+No Node.js, terminal, installation, or internet connection needed. Solo play, training, and two players on one computer all work in both the browser and offline editions. Playing on separate computers uses the LAN server edition below.
+
+### LAN server and source code
+
+For LAN battles or editing the game, install [Node.js](https://nodejs.org) 18 or newer, then [download the source](https://github.com/howmuchcomputer/midlane/archive/refs/heads/main.zip) and unzip it. Browser and offline players can skip this section.
+
+Run these commands to start the LAN server and open your browser automatically. Keep the server window open while playing and press Control+C to stop it. No dependency install or build step is needed for the server.
 
 ```bash
 git clone https://github.com/howmuchcomputer/midlane.git
 cd midlane
-npm start            # or: node server.js
+npm start            # starts the server and opens your browser
 ```
 
 ```
@@ -37,13 +58,13 @@ npm start            # or: node server.js
      LAN:     http://192.168.1.23:7878   (en0)
 ```
 
-Open the **Local** link. Press any key. Pick a hero. Hit things.
+If your browser does not open, use the **Local** link printed in the window. For a server that doesn't open a browser, use `npm run serve` (or `node server.js`). `BROWSER=none npm start` and `node server.js --open --no-open` also suppress browser opening.
 
 ## 🤝 Beat up a friend (LAN)
 
 1. Run the server on one machine.
 2. You open the **Local** link; your friend opens the **LAN** link on their laptop (same Wi-Fi).
-3. Both go to **LAN Battle**. One of you clicks **Host a lane**, the other clicks it in the list to join.
+3. Both choose **More ways to play → LAN Battle**. One of you clicks **Host a lane**, the other clicks it in the list to join.
 4. Pick heroes, the host picks the arena, and settle it.
 
 Inputs travel over **GGPO-style rollback netcode**. Your own inputs apply instantly, your friend's are predicted, and any wrong guesses get quietly rewound and replayed. On home Wi-Fi it's usually 1 to 3 frames of rollback, so it feels like you're on the same couch. The small `ping · rb` readout under the timer shows how it's doing.
@@ -161,9 +182,14 @@ A hero is two files: a **sim** file (stats, frame data, hitboxes, abilities) and
 ### Tests and tools
 
 ```bash
-npm install       # dev tools only (ESLint); the game itself needs nothing
+npm install       # dev tools only (ESLint and Playwright); the game itself needs nothing
 npm test          # determinism soak for all 36 matchups, rollback over a fake laggy network,
                   # CPU matches for every hero, and the LAN server + WebSocket lobby
+npm run test:launch # browser opening, headless starts, and busy-port handling
+npx playwright install chromium # one-time browser setup for development checks
+npm run test:startup # one-button play, keyboard/gamepad input, rematches, and mode navigation
+npm run build:web  # static site + the self-contained offline download in dist/
+npm run test:pages # a /midlane/ static host and file:// play with networking disabled
 npm run lint
 
 node tools/balance.mjs 8 2                # CPU round-robin: win rates, match length, ult timing
@@ -177,7 +203,21 @@ With the server running, there are dev pages too:
 - `/dev/poses.html?hero=brakka`: every animation as a contact sheet with hitboxes drawn on
 - `/dev/stage.html?stage=astral`, `/dev/icons.html`, `/dev/audio.html`: arenas, icons, every sound
 
-CI runs lint and tests on every push and pull request.
+CI runs lint, game, launcher, browser, and offline-download checks on every push and pull request. Successful main-branch runs also publish the browser game and offline download to GitHub Pages.
+
+### Publish the Play and Download buttons
+
+A repository owner or maintainer enables this once:
+
+1. Put these changes on the repository's `main` branch.
+2. In **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**.
+3. Run **Actions → CI → Run workflow** on `main`, or push a new commit to `main`.
+
+After the checks and deployment pass, the Play and Download buttons at the top of this page work for everyone. GitHub hosts the files; visitors only need a desktop browser. The workflow publishes `dist/`, including `download/MIDLANE-offline.zip`.
+
+For a fork, update the two button URLs and the play/download links in this README to `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/`. The game itself supports repository subpaths and custom domains without path changes.
+
+The browser and offline editions offer solo play, training, and Local Versus. GitHub Pages cannot run the LAN relay; that stays in the Node.js server edition.
 
 ### Ideas if you're looking for something to build
 
@@ -192,7 +232,7 @@ CI runs lint and tests on every push and pull request.
 
 - **Friend can't connect:** they need the **LAN** address, not `localhost`. Check you're on the same network and that the macOS firewall let `node` through. Some guest and office networks block device-to-device traffic.
 - **Choppy frame rate:** Options → Graphics → Performance, then reload.
-- **No sound:** browsers only start audio after you interact, so press a key on the title screen.
+- **No sound:** browsers only start audio after you interact, so click **Play now** or **More ways to play**.
 
 ## 📜 License
 

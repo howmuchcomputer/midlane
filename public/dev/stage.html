@@ -2,7 +2,7 @@
 <html><head><meta charset="utf-8"><title>Stage preview</title>
 <style>html,body{margin:0;height:100%;background:#000;overflow:hidden}canvas{width:100%;height:100%;display:block}
 #dbg{position:fixed;left:8px;top:8px;font:12px/1.4 monospace;color:#fff;text-shadow:0 1px 2px #000;white-space:pre;pointer-events:none}</style>
-<script type="importmap">{"imports":{"three":"/vendor/three/build/three.module.js","three/addons/":"/vendor/three/addons/"}}</script>
+<script type="importmap">{"imports":{"three":"../vendor/three/build/three.module.js","three/addons/":"../vendor/three/addons/"}}</script>
 </head><body><canvas id="c"></canvas><div id="dbg"></div>
 <script type="module">
 // Stage preview. Query params:
@@ -12,8 +12,8 @@
 //  ult: 1 to show the super-freeze dim plane   info: 1 to print draw calls / triangles
 //  live: 1 to keep animating in real time (orbit with mouse drag)
 import * as THREE from 'three';
-import { createGame, step } from '/src/sim/game.js';
-import { GameRenderer } from '/src/render/renderer.js';
+import { createGame, step } from '../src/sim/game.js';
+import { GameRenderer } from '../src/render/renderer.js';
 const q = new URLSearchParams(location.search);
 const p1 = q.get('p1') || 'aldric', p2 = q.get('p2') || 'aldric';
 const G = createGame({ heroes: [p1, p2], seed: 7, noShop: true });
